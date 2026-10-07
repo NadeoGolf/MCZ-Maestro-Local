@@ -21,7 +21,7 @@ Merci aux projets et travaux existants ayant servi de base à la compréhension 
 
 ## Configuration matérielle requise
 
-Le poêle à granulés MCZ possède son propre réseau Wi-Fi (SSID). La solution la plus simple pour établir cette connexion consiste à utiliser un Raspberry Pi connecté à votre réseau local par câble Ethernet, et à configurer son Wi-Fi intégré pour se connecter au SSID du poêle à granulés. Cependant, tout appareil doté de deux interfaces réseau, dont au moins une interface Wi-Fi pour la connexion au poêle, conviendra.
+Le poêle à granulés MCZ possède son propre réseau Wi-Fi (SSID). La solution la plus simple pour établir cette connexion consiste à utiliser un appareil doté de deux interfaces réseau connecté à votre réseau local par câble Ethernet, et à configurer son Wi-Fi pour se connecter au SSID du poêle à granulés.
 
 ## Fonctions principales
 
