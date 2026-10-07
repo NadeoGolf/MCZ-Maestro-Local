@@ -57,16 +57,16 @@ Paramètres → Appareils et services → Ajouter une intégration → MCZ Maest
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=NadeoGolf&repository=MCZ-Maestro-Local&category=integration)
 
-1.Installer HACS
-2.Aller dans la section « Intégrations » de HACS
-3.Cliquer sur les 3 points en haut à droite
-4.Cliquer sur « Dépôts personnalisés »
-5.Ajouter le dépôt [https://github.com/NadeoGolf/MCZ-Maestro-Local](https://github.com/NadeoGolf/MCZ-Maestro-Local) avec la catégorie Integration
-6.Rechercher « Maestro MCZ » et l’ajouter
-7.Dans l’interface Home Assistant (HA), aller dans « Configuration »
-8.Cliquer sur « Intégrations »
-9.Cliquer sur « + Ajouter une intégration »
-10.Rechercher « Maestro MCZ »
+1. Installer HACS
+2. Aller dans la section « Intégrations » de HACS
+3. Cliquer sur les 3 points en haut à droite
+4. Cliquer sur « Dépôts personnalisés »
+5. Ajouter le dépôt [https://github.com/NadeoGolf/MCZ-Maestro-Local](https://github.com/NadeoGolf/MCZ-Maestro-Local) avec la catégorie Integration
+6. Rechercher « Maestro MCZ » et l’ajouter
+7. Dans l’interface Home Assistant (HA), aller dans « Configuration »
+8. Cliquer sur « Intégrations »
+9. Cliquer sur « + Ajouter une intégration »
+10. Rechercher « Maestro MCZ »
 
 ## Configuration
 
