@@ -55,6 +55,8 @@ Paramètres → Appareils et services → Ajouter une intégration → MCZ Maest
 
 ## Installation HACS
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=NadeoGolf&repository=MCZ-Maestro-Local&category=integration)
+
 Ajouter comme dépôt personnalisé HACS de type :
 
 ```text
