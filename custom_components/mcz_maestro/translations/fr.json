@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MCZ Maestro Local",
+        "description": "Connexion locale au poêle MCZ Maestro par WebSocket.",
+        "data": {
+          "host": "Adresse IP du poêle",
+          "port": "Port WebSocket"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter au poêle. Vérifie l'adresse IP et le port."
+    },
+    "abort": {
+      "already_configured": "Ce poêle est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options MCZ Maestro Local",
+        "description": "Réglages de fonctionnement de l'intégration.",
+        "data": {
+          "name": "Nom affiché du poêle",
+          "model": "Modèle du poêle",
+          "stove_type": "Type de poêle",
+          "control_mode": "Mode de contrôle du thermostat",
+          "scan_interval": "Intervalle de lecture en secondes"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+DOMAIN = "mcz_maestro"
+INTEGRATION_VERSION = "0.20.5"
+
+CONF_HOST = "host"
+CONF_PORT = "port"
+CONF_NAME = "name"
+CONF_MODEL = "model"
+CONF_STOVE_TYPE = "stove_type"
+CONF_CONTROL_MODE = "control_mode"
+CONF_COLD_TOLERANCE = "cold_tolerance"
+CONF_HOT_TOLERANCE = "hot_tolerance"
+CONF_AWAY_TEMPERATURE = "away_temperature"
+CONF_MIN_CYCLE_DURATION_SECONDS = "min_cycle_duration_seconds"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_OPEN_TIMEOUT = "open_timeout"
+CONF_RECV_TIMEOUT = "recv_timeout"
+CONF_RETRIES = "retries"
+
+CONTROL_MODE_HA_THERMOSTAT = "home_assistant_thermostat"
+CONTROL_MODE_NATIVE_SETPOINT = "mcz_native_setpoint"
+CONTROL_MODE_OPTIONS = {
+    CONTROL_MODE_HA_THERMOSTAT: "Thermostat Home Assistant local",
+    CONTROL_MODE_NATIVE_SETPOINT: "Consigne native MCZ",
+}
+
+STOVE_TYPE_AIR = "air"
+STOVE_TYPE_HYDRO = "hydro"
+STOVE_TYPE_OPTIONS = {
+    STOVE_TYPE_AIR: "Air",
+    STOVE_TYPE_HYDRO: "Hydro",
+}
+
+DEFAULT_HOST = "192.168.120.1"
+DEFAULT_PORT = 81
+DEFAULT_NAME = "MCZ EGO Air"
+DEFAULT_MODEL = "EGO Air Maestro"
+DEFAULT_STOVE_TYPE = STOVE_TYPE_AIR
+DEFAULT_SCAN_INTERVAL = 15
+DEFAULT_OPEN_TIMEOUT = 5.0
+DEFAULT_RECV_TIMEOUT = 1.5
+DEFAULT_COMMAND_RECV_TIMEOUT = 2.0
+DEFAULT_RETRIES = 1
+
+# Valeurs alignées sur l'ancien generic_thermostat de l'utilisateur.
+DEFAULT_TARGET_TEMPERATURE = 18.0
+DEFAULT_AWAY_TEMPERATURE = 18.0
+DEFAULT_COLD_TOLERANCE = 1.5
+DEFAULT_HOT_TOLERANCE = 0.5
+DEFAULT_MIN_CYCLE_SECONDS = 10 * 60
+
+MANUFACTURER = "MCZ"
+MODEL = DEFAULT_MODEL

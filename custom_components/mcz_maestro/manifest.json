@@ -1,0 +1,12 @@
+{
+  "domain": "mcz_maestro",
+  "name": "MCZ Maestro Local",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/Chibald/maestrogateway",
+  "iot_class": "local_polling",
+  "requirements": [
+    "websockets>=12.0"
+  ],
+  "version": "0.20.0"
+}
