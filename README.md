@@ -19,9 +19,13 @@ Merci aux projets et travaux existants ayant servi de base à la compréhension 
 - `maestrogateway`, qui a servi de référence pour comprendre les commandes et le protocole WebSocket MCZ.
 - La communauté Home Assistant pour la documentation, les exemples d’intégrations personnalisées et les bonnes pratiques.
 
+## Configuration matérielle requise
+
+Le poêle à granulés MCZ possède son propre réseau Wi-Fi (SSID). La solution la plus simple pour établir cette connexion consiste à utiliser un Raspberry Pi connecté à votre réseau local par câble Ethernet, et à configurer son Wi-Fi intégré pour se connecter au SSID du poêle à granulés. Cependant, tout appareil doté de deux interfaces réseau, dont au moins une interface Wi-Fi pour la connexion au poêle, conviendra.
+
 ## Fonctions principales
 
-- Connexion locale WebSocket au poêle, par défaut `ws://192.168.120.1:81`.
+- Connexion locale WebSocket au poêle, par défaut `ws://192.168.120.1:81`. il faut être connecté au direct au Wifi du poêle.
 - Thermostat Home Assistant avec deux modes de contrôle :
   - `home_assistant_thermostat` : Home Assistant régule ON/OFF avec hystérésis.
   - `mcz_native_setpoint` : la consigne de température est envoyée au poêle avec `Temperature_Setpoint`.
