@@ -4,6 +4,8 @@
 
 # MCZ Maestro Local pour Home Assistant
 
+[![Validate integration](https://github.com/NadeoGolf/MCZ-Maestro-Local/actions/workflows/validate.yml/badge.svg)](https://github.com/NadeoGolf/MCZ-Maestro-Local/actions/workflows/validate.yml)
+
 **Pilotez et surveillez votre poêle à granulés MCZ Maestro directement depuis Home Assistant, en local, sans passer par le cloud MCZ.**
 
 [![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=NadeoGolf&repository=MCZ-Maestro-Local&category=integration)
@@ -244,7 +246,7 @@ Cette intégration n'est **ni développée ni approuvée par MCZ**.
 
 Le projet a été créé pour un besoin personnel, avec l'aide de **l'intelligence artificielle** pour la génération, l'adaptation et la correction du code, puis avec des essais dans l'environnement de son auteur. Il peut encore comporter des erreurs ou des hypothèses propres au modèle utilisé.
 
-Les rapports de bogues, retours de compatibilité et *pull requests* sont les bienvenus :
+Les rapports de bogues, retours de compatibilité et *pull requests* sont les bienvenus. Consultez aussi [CONTRIBUTING.md](CONTRIBUTING.md) et [SECURITY.md](SECURITY.md) :
 
 - [Ouvrir un problème sur GitHub](https://github.com/NadeoGolf/MCZ-Maestro-Local/issues).
 - Préciser le **modèle exact**, la **version du firmware**, le **mode de contrôle** et les étapes permettant de reproduire le problème.
@@ -253,6 +255,7 @@ Les rapports de bogues, retours de compatibilité et *pull requests* sont les bi
 Pour exécuter les tests unitaires du protocole depuis la racine du dépôt, avec Python et `pytest` installés :
 
 ```bash
+python -m pip install -r requirements-dev.txt
 python -m pytest -q tests/
 ```
 
@@ -261,6 +264,8 @@ python -m pytest -q tests/
 - [Chibald/maestrogateway](https://github.com/Chibald/maestrogateway), pour le travail de compréhension et de documentation du protocole MCZ Maestro.
 - La [communauté Home Assistant](https://www.home-assistant.io/) pour sa documentation et ses outils d'intégration.
 
-## Licence
+## Licence et publication
 
-**Aucun fichier `LICENSE` n'est actuellement inclus dans ce dépôt.** Les conditions de réutilisation du code doivent donc être précisées par son mainteneur. Si vous contribuez ou réutilisez une partie du code provenant d'autres projets, veillez à respecter leurs licences respectives.
+Le code de ce dépôt est distribué sous la **GNU General Public License v3.0** ([LICENSE](LICENSE)). La documentation du protocole utilisée comme référence provient notamment de [Chibald/maestrogateway](https://github.com/Chibald/maestrogateway), également sous GPL-3.0. Consultez [NOTICE.md](NOTICE.md) pour les attributions et les réserves concernant les marques et logos tiers.
+
+Pour publier une mise à jour sur GitHub et préparer une release compatible HACS, suivez le [guide de publication](docs/PUBLICATION_GITHUB.md). Les tests GitHub Actions vérifient le dépôt, mais ils ne remplacent pas un essai sur un poêle réel.

@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MCZ Maestro Local",
+        "description": "Connect directly to your MCZ Maestro stove over the local WebSocket connection.",
+        "data": {
+          "host": "Stove IP address",
+          "port": "WebSocket port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the stove. Check the IP address, port and network connectivity."
+    },
+    "abort": {
+      "already_configured": "This stove is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MCZ Maestro Local options",
+        "description": "Configure how the integration monitors and controls the stove.",
+        "data": {
+          "name": "Stove display name",
+          "model": "Stove model",
+          "stove_type": "Stove type",
+          "control_mode": "Thermostat control mode",
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    }
+  }
+}

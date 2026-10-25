@@ -10,9 +10,13 @@
 - Harmonise la version des diagnostics et du manifeste sur `0.21.1`.
 - Ajoute des tests de non-régression ciblés sur l'envoi des commandes d'alimentation.
 
-### Documentation
+### Documentation et préparation GitHub/HACS
 
 - README GitHub enrichi : installation HACS, prérequis réseau et fonctionnalités réellement implémentées.
+- Complète le manifeste (`issue_tracker`, `codeowners`, `integration_type`) et retire l'ancienne option HACS non documentée `render_readme`.
+- Ajoute `strings.json` et la traduction anglaise pour les formulaires de configuration.
+- Ajoute les validations GitHub Actions (tests Python, HACS et hassfest), les templates de contributions et le guide de publication.
+- Ajoute le texte de la licence GPLv3 et les attributions au projet maestrogateway.
 
 > Correctif vérifié par tests simulés : **pas encore validé sur un poêle physique**. La décision d'ignorer OFF repose sur le dernier état reçu par Home Assistant ; en cas de doute ou d'information obsolète, vérifier l'état réel du poêle.
 
