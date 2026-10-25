@@ -1,0 +1,21 @@
+# Historique des modifications
+
+## 0.21.1 — 25 octobre 2026
+
+### Correctif
+
+- Évite de renvoyer la commande MCZ `Power=OFF` (`C|WriteParametri|34|40`) lorsque le dernier état physique connu du poêle vaut `0` (éteint), `40` (extinction) ou `41` (refroidissement).
+- Conserve la possibilité d'envoyer OFF dans les autres états, y compris `45` et `46`, et lorsque l'état physique est inconnu, pour ne pas bloquer un arrêt nécessaire.
+- Ajoute une trace `debug` quand une commande OFF redondante est ignorée.
+- Harmonise la version des diagnostics et du manifeste sur `0.21.1`.
+- Ajoute des tests de non-régression ciblés sur l'envoi des commandes d'alimentation.
+
+### Documentation
+
+- README GitHub enrichi : installation HACS, prérequis réseau et fonctionnalités réellement implémentées.
+
+> Correctif vérifié par tests simulés : **pas encore validé sur un poêle physique**. La décision d'ignorer OFF repose sur le dernier état reçu par Home Assistant ; en cas de doute ou d'information obsolète, vérifier l'état réel du poêle.
+
+## 0.21.0
+
+- Version de référence de l'archive d'origine fournie pour cette mise à jour.

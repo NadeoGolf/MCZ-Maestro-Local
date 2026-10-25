@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import logging
 
 from homeassistant.components.climate import ClimateEntity, HVACAction
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -25,6 +26,8 @@ from .const import (
     DEFAULT_TARGET_TEMPERATURE,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_PRESET_MODE = "preset_mode"
 PRESET_AWAY = "away"
@@ -277,6 +280,22 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
             self._regulating = False
 
     async def _async_send_power(self, power: bool, bypass_min_cycle: bool = False) -> None:
+        if not power:
+            # Use the stove's physical state, not the thermostat's HVAC mode.
+            raw_state = (self.coordinator.data or {}).get("stove_state")
+            try:
+                stove_state = int(raw_state) if raw_state is not None else None
+            except (ValueError, TypeError):
+                stove_state = None
+
+            # 0 = off, 40 = stopping, 41 = cooling.
+            # Repeating OFF in these states may restart ventilation.
+            # Do not suppress OFF in Auto Eco (45) or standby (46):
+            # an explicit stop may be needed to prevent an automatic restart.
+            if stove_state in (0, 40, 41):
+                _LOGGER.debug("MCZ: skipping redundant Power=OFF; stove_state=%s", stove_state)
+                return
+
         now = datetime.now(timezone.utc)
         if not bypass_min_cycle and self._last_power_command is not None:
             elapsed = (now - self._last_power_command).total_seconds()
