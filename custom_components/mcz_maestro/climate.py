@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.climate import ClimateEntity, HVACAction
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -195,7 +196,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         self.async_write_ha_state()
 
         if self.native_control_enabled:
-            await self.coordinator.client.send_command("Temperature_Setpoint", self._target_temperature)
+            await self.coordinator.async_send_command("Temperature_Setpoint", self._target_temperature)
             await self.coordinator.async_request_refresh()
             return
 
@@ -209,7 +210,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         self.async_write_ha_state()
 
         if self.native_control_enabled:
-            await self.coordinator.client.send_command("Temperature_Setpoint", self.target_temperature)
+            await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
             await self.coordinator.async_request_refresh()
             return
 
@@ -222,7 +223,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             self._hvac_mode = HVACMode.HEAT
             if self.native_control_enabled:
-                await self.coordinator.client.send_command("Temperature_Setpoint", self.target_temperature)
+                await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
                 await self._async_send_power(True, bypass_min_cycle=True)
             else:
                 await self._async_regulate()
@@ -234,7 +235,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         self._hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
         if self.native_control_enabled:
-            await self.coordinator.client.send_command("Temperature_Setpoint", self.target_temperature)
+            await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
             await self._async_send_power(True, bypass_min_cycle=True)
             await self.coordinator.async_request_refresh()
             return
@@ -249,7 +250,14 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         super()._handle_coordinator_update()
         if self._hvac_mode == HVACMode.HEAT and not self.native_control_enabled:
-            self.hass.async_create_task(self._async_regulate())
+            self.hass.async_create_task(self._async_regulate_in_background())
+
+    async def _async_regulate_in_background(self) -> None:
+        """Regulate after a poll; no caller can receive the error, so log it."""
+        try:
+            await self._async_regulate()
+        except HomeAssistantError as err:
+            _LOGGER.warning("MCZ: thermostat regulation command failed: %s", err)
 
     async def _async_regulate(self) -> None:
         if self._regulating or self._hvac_mode != HVACMode.HEAT or self.native_control_enabled:
@@ -302,5 +310,5 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
             if elapsed < self.min_cycle_duration_seconds:
                 return
 
-        await self.coordinator.client.send_command("Power", power)
+        await self.coordinator.async_send_command("Power", power)
         self._last_power_command = now

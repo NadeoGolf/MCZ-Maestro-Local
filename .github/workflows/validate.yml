@@ -1,0 +1,46 @@
+name: Validate integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Check Python syntax
+        run: python -m compileall -q custom_components/mcz_maestro
+      - name: Run unit tests
+        run: python -m pytest -q tests
+
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Brand images are shipped in custom_components/mcz_maestro/brand.
+          ignore: brands
+
+  hassfest:
+    name: Hassfest validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master

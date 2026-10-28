@@ -96,9 +96,9 @@ class MczMaestroSwitch(CoordinatorEntity, SwitchEntity):
         return self.entity_description.icon_off or self.entity_description.icon
 
     async def async_turn_on(self, **kwargs):
-        await self.coordinator.client.send_command(self.entity_description.command, True)
+        await self.coordinator.async_send_command(self.entity_description.command, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        await self.coordinator.client.send_command(self.entity_description.command, False)
+        await self.coordinator.async_send_command(self.entity_description.command, False)
         await self.coordinator.async_request_refresh()

@@ -55,6 +55,9 @@ class _FakeCoordinator:
         self.data = status
         self.client = _FakeClient()
 
+    async def async_send_command(self, command, value):
+        await self.client.send_command(command, value)
+
 
 class _FakeClimate:
     def __init__(self, status):

@@ -70,14 +70,20 @@ class MczMaestroClient:
             self.status_requests += 1
 
             current = dict(self._last_status)
+            received = 0
             # The stove may answer with one full frame or several delta messages.
             for _ in range(8):
                 try:
                     raw = await asyncio.wait_for(websocket.recv(), timeout=self.recv_timeout)
                 except asyncio.TimeoutError:
                     break
+                received += 1
                 update = self._parse_update(raw)
                 current = merge_status(current, update)
+
+            if not received:
+                # An open WebSocket without any answer must not keep stale values available.
+                raise MczMaestroError("Aucune réponse du poêle à la demande d'état")
 
             self._last_status = current
             self._mark_success()

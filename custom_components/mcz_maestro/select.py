@@ -101,7 +101,7 @@ class MczMaestroSelect(CoordinatorEntity, RestoreEntity, SelectEntity):
 
         self._restored_option = option
         self.async_write_ha_state()
-        await self.coordinator.client.send_command(self.entity_description.command, value)
+        await self.coordinator.async_send_command(self.entity_description.command, value)
         await self.coordinator.async_request_refresh()
 
     @staticmethod

@@ -4,7 +4,27 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 
-from .const import CONF_MODEL, CONF_NAME, DEFAULT_MODEL, DEFAULT_NAME, DOMAIN, MANUFACTURER
+from .const import (
+    CONF_AWAY_TEMPERATURE,
+    CONF_COLD_TOLERANCE,
+    CONF_HOT_TOLERANCE,
+    CONF_MIN_CYCLE_DURATION_SECONDS,
+    CONF_MODEL,
+    CONF_NAME,
+    DEFAULT_MODEL,
+    DEFAULT_NAME,
+    DOMAIN,
+    MANUFACTURER,
+)
+
+# Thermostat settings read live by the climate entity: changing them must not
+# reload the integration (reconnection, unavailable entities, min cycle reset).
+LIVE_OPTION_KEYS = {
+    CONF_AWAY_TEMPERATURE,
+    CONF_COLD_TOLERANCE,
+    CONF_HOT_TOLERANCE,
+    CONF_MIN_CYCLE_DURATION_SECONDS,
+}
 
 
 def entry_value(entry: ConfigEntry, key: str, default: Any) -> Any:
@@ -34,3 +54,8 @@ def device_info(entry: ConfigEntry) -> dict[str, Any]:
         "manufacturer": MANUFACTURER,
         "model": device_model(entry),
     }
+
+
+def reload_options(options: Any) -> dict[str, Any]:
+    """Return the options whose change requires reloading the integration."""
+    return {key: value for key, value in options.items() if key not in LIVE_OPTION_KEYS}
