@@ -34,7 +34,7 @@ MCZ Maestro Local est une **intégration personnalisée Home Assistant** qui com
 
 | Élément | Exigence ou information |
 | --- | --- |
-| Home Assistant | Intégration personnalisée via `custom_components` ; `hacs.json` annonce une version minimale de **2024.6.0**. |
+| Home Assistant | Intégration personnalisée via `custom_components` ; `hacs.json` annonce une version minimale de **2024.11.0**. |
 | Poêle | MCZ équipé du **Maestro classique**, avec point d'accès Wi-Fi et serveur WebSocket local compatible. |
 | Modèle de référence | Configuration prévue initialement pour **MCZ EGO Air Maestro** ; autres modèles à vérifier. |
 | Réseau | Accès IP **depuis Home Assistant** au poêle, généralement `192.168.120.1` sur le port TCP `81`. |

@@ -10,6 +10,17 @@
 - Harmonise la version des diagnostics et du manifeste sur `0.21.1`.
 - Ajoute des tests de non-régression ciblés sur l'envoi des commandes d'alimentation.
 
+### Correctifs complémentaires
+
+- Le formulaire d'options n'efface plus les tolérances, la température d'absence ni la durée minimale de cycle réglées via les entités `number`.
+- Modifier un réglage du thermostat ne recharge plus toute l'intégration (plus de reconnexion ni d'entités indisponibles, l'anti-cycle court est conservé).
+- Un poêle qui ne répond pas à la demande d'état est désormais signalé comme indisponible au lieu de conserver d'anciennes valeurs.
+- Les échecs de commande sont remontés comme erreurs Home Assistant lisibles ; un échec de la régulation automatique est journalisé.
+- Les diagnostics masquent l'adresse IP du poêle dans le titre, l'identifiant unique et les messages d'erreur.
+- Version minimale de Home Assistant portée à **2024.11.0** (requise par le formulaire d'options).
+- Suppression de la plateforme `binary_sensor` vide et inutilisée.
+- Ajout du workflow `.github/workflows/validate.yml` et d'un `.gitignore`, absents de l'envoi précédent.
+
 ### Documentation et préparation GitHub/HACS
 
 - README GitHub enrichi : installation HACS, prérequis réseau et fonctionnalités réellement implémentées.

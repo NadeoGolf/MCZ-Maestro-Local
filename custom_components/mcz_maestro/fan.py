@@ -98,13 +98,13 @@ class MczMaestroFan(CoordinatorEntity, FanEntity):
             level = math.ceil((percentage / 100) * self.entity_description.max_manual_level)
             level = max(1, min(level, self.entity_description.max_manual_level))
 
-        await self.coordinator.client.send_command(self.entity_description.command, float(level))
+        await self.coordinator.async_send_command(self.entity_description.command, float(level))
         await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         if preset_mode != AUTO_PRESET:
             return
-        await self.coordinator.client.send_command(self.entity_description.command, float(self.entity_description.auto_level))
+        await self.coordinator.async_send_command(self.entity_description.command, float(self.entity_description.auto_level))
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, percentage: int | None = None, preset_mode: str | None = None, **kwargs) -> None:
@@ -119,9 +119,9 @@ class MczMaestroFan(CoordinatorEntity, FanEntity):
         if level is None or level <= 0 or level == self.entity_description.auto_level:
             level = self._last_non_zero_level or 1
 
-        await self.coordinator.client.send_command(self.entity_description.command, float(level))
+        await self.coordinator.async_send_command(self.entity_description.command, float(level))
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self.coordinator.client.send_command(self.entity_description.command, 0.0)
+        await self.coordinator.async_send_command(self.entity_description.command, 0.0)
         await self.coordinator.async_request_refresh()

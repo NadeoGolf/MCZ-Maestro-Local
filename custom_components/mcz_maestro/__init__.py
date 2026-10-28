@@ -16,6 +16,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import MczMaestroCoordinator
+from .helpers import reload_options
 
 PLATFORMS = ["climate", "sensor", "switch", "select", "number", "fan"]
 
@@ -63,5 +64,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the integration after options are changed."""
+    """Reload after options changes, except for thermostat settings read live."""
+    coordinator: MczMaestroCoordinator | None = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if coordinator is not None and reload_options(entry.options) == coordinator.reload_options:
+        # Refresh entity states and let the thermostat re-evaluate with the new values.
+        coordinator.async_update_listeners()
+        return
     await hass.config_entries.async_reload(entry.entry_id)
