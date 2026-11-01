@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import MczMaestroConfigEntry
+from .entity import MczMaestroEntity
 
 
 @dataclass(frozen=True)
@@ -15,7 +17,6 @@ class MczSwitchDescription(SwitchEntityDescription):
     command: str = ""
     icon_on: str | None = None
     icon_off: str | None = None
-    enabled_by_default: bool = True
 
 
 SWITCHES: tuple[MczSwitchDescription, ...] = (
@@ -64,23 +65,19 @@ SWITCHES: tuple[MczSwitchDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(MczMaestroSwitch(coordinator, entry, description) for description in SWITCHES)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MczMaestroConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
+    async_add_entities(MczMaestroSwitch(coordinator, description) for description in SWITCHES)
 
 
-class MczMaestroSwitch(CoordinatorEntity, SwitchEntity):
-    _attr_has_entity_name = True
+class MczMaestroSwitch(MczMaestroEntity, SwitchEntity):
+    entity_description: MczSwitchDescription
 
-    def __init__(self, coordinator, entry, description: MczSwitchDescription):
-        super().__init__(coordinator)
+    def __init__(self, coordinator, description: MczSwitchDescription):
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        return self.entity_description.enabled_by_default
 
     @property
     def is_on(self):
@@ -96,9 +93,7 @@ class MczMaestroSwitch(CoordinatorEntity, SwitchEntity):
         return self.entity_description.icon_off or self.entity_description.icon
 
     async def async_turn_on(self, **kwargs):
-        await self.coordinator.async_send_command(self.entity_description.command, True)
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, True)
 
     async def async_turn_off(self, **kwargs):
-        await self.coordinator.async_send_command(self.entity_description.command, False)
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, False)

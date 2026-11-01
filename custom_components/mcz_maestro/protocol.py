@@ -31,6 +31,22 @@ BOOL_COMMANDS = {
     "Summer_Mode",
 }
 
+# Normalized status key updated optimistically by each command.
+COMMAND_STATE_KEYS: dict[str, str] = {
+    "Power": "power",
+    "Active_Mode": "active_mode",
+    "Power_Level": "power_level",
+    "Fan_State": "fan_state",
+    "DuctedFan1": "ducted_fan_1",
+    "DuctedFan2": "ducted_fan_2",
+    "Eco_Mode": "eco_mode",
+    "Temperature_Setpoint": "temperature_setpoint",
+    "Silent_Mode": "silent_mode",
+    "Sound_Effects": "sound_effects",
+    "Summer_Mode": "summer_mode",
+    "Profile": "profile",
+}
+
 INT_COMMANDS = {
     "Power_Level",
     "Fan_State",
@@ -41,61 +57,62 @@ INT_COMMANDS = {
 
 # MCZ Maestro RecuperoInfo positional mapping, based on maestrogateway/messages.py.
 # Position 0 is the frame type. Positions start at 1 for Stove_State.
-POSITIONAL_FIELDS: list[str | None] = [None] * 61
-POSITIONAL_FIELDS[1] = "Stove_State"
-POSITIONAL_FIELDS[2] = "Fan_State"
-POSITIONAL_FIELDS[3] = "DuctedFan1"
-POSITIONAL_FIELDS[4] = "DuctedFan2"
-POSITIONAL_FIELDS[5] = "Fume_Temperature"
-POSITIONAL_FIELDS[6] = "Ambient_Temperature"
-POSITIONAL_FIELDS[7] = "Puffer_Temperature"
-POSITIONAL_FIELDS[8] = "Boiler_Temperature"
-POSITIONAL_FIELDS[9] = "NTC3_Temperature"
-POSITIONAL_FIELDS[10] = "Candle_Condition"
-POSITIONAL_FIELDS[11] = "ACTIVE_Set"
-POSITIONAL_FIELDS[12] = "RPM_Fam_Fume"
-POSITIONAL_FIELDS[13] = "RPM_WormWheel_Set"
-POSITIONAL_FIELDS[14] = "RPM_WormWheel_Live"
-POSITIONAL_FIELDS[16] = "Pump_PWM"
-POSITIONAL_FIELDS[17] = "Brazier"
-POSITIONAL_FIELDS[18] = "Profile"
-POSITIONAL_FIELDS[20] = "Active_Mode"
-POSITIONAL_FIELDS[21] = "Active_Live"
-POSITIONAL_FIELDS[22] = "Control_Mode"
-POSITIONAL_FIELDS[23] = "Eco_Mode"
-POSITIONAL_FIELDS[24] = "Silent_Mode"
-POSITIONAL_FIELDS[25] = "Chronostat"
-POSITIONAL_FIELDS[26] = "Temperature_Setpoint"
-POSITIONAL_FIELDS[27] = "Boiler_Setpoint"
-POSITIONAL_FIELDS[28] = "Temperature_Motherboard"
-# Power_Level is intentionally not parsed from RecuperoInfo positional frames.
-# On the tested EGO Air setup this position can contain unrelated values such
-# as 14 while the actual user-selected power is 4. Power is updated only from
-# explicit JSON deltas {"Power_Level": x} or from optimistic command updates.
-POSITIONAL_FIELDS[30] = "FirmwareVersion"
-POSITIONAL_FIELDS[31] = "DatabaseID"
-POSITIONAL_FIELDS[32] = "Date_Time_Hours"
-POSITIONAL_FIELDS[33] = "Date_Time_Minutes"
-POSITIONAL_FIELDS[34] = "Date_Day_Of_Month"
-POSITIONAL_FIELDS[35] = "Date_Month"
-POSITIONAL_FIELDS[36] = "Date_Year"
-POSITIONAL_FIELDS[37] = "Total_Operating_Hours"
-POSITIONAL_FIELDS[38] = "Hours_Of_Operation_In_Power1"
-POSITIONAL_FIELDS[39] = "Hours_Of_Operation_In_Power2"
-POSITIONAL_FIELDS[40] = "Hours_Of_Operation_In_Power3"
-POSITIONAL_FIELDS[41] = "Hours_Of_Operation_In_Power4"
-POSITIONAL_FIELDS[42] = "Hours_Of_Operation_In_Power5"
-POSITIONAL_FIELDS[43] = "Hours_To_Service"
-POSITIONAL_FIELDS[44] = "Minutes_To_Switch_Off"
-POSITIONAL_FIELDS[45] = "Number_Of_Ignitions"
-POSITIONAL_FIELDS[46] = "Active_Temperature"
-# Pellet_Sensor at position 47 is intentionally not exposed for this setup.
-POSITIONAL_FIELDS[48] = "Celcius_Or_Fahrenheit"
-POSITIONAL_FIELDS[49] = "Sound_Effects"
-POSITIONAL_FIELDS[50] = "Sleep"
-POSITIONAL_FIELDS[51] = "Mode"
-POSITIONAL_FIELDS[59] = "Return_Temperature"
-POSITIONAL_FIELDS[60] = "AntiFreeze"
+POSITIONAL_FIELDS: dict[int, str] = {
+    1: "Stove_State",
+    2: "Fan_State",
+    3: "DuctedFan1",
+    4: "DuctedFan2",
+    5: "Fume_Temperature",
+    6: "Ambient_Temperature",
+    7: "Puffer_Temperature",
+    8: "Boiler_Temperature",
+    9: "NTC3_Temperature",
+    10: "Candle_Condition",
+    11: "ACTIVE_Set",
+    12: "RPM_Fam_Fume",
+    13: "RPM_WormWheel_Set",
+    14: "RPM_WormWheel_Live",
+    16: "Pump_PWM",
+    17: "Brazier",
+    18: "Profile",
+    20: "Active_Mode",
+    21: "Active_Live",
+    22: "Control_Mode",
+    23: "Eco_Mode",
+    24: "Silent_Mode",
+    25: "Chronostat",
+    26: "Temperature_Setpoint",
+    27: "Boiler_Setpoint",
+    28: "Temperature_Motherboard",
+    # Power_Level is intentionally not parsed from RecuperoInfo positional frames.
+    # On the tested EGO Air setup this position can contain unrelated values such
+    # as 14 while the actual user-selected power is 4. Power is updated only from
+    # explicit JSON deltas {"Power_Level": x} or from optimistic command updates.
+    30: "FirmwareVersion",
+    31: "DatabaseID",
+    32: "Date_Time_Hours",
+    33: "Date_Time_Minutes",
+    34: "Date_Day_Of_Month",
+    35: "Date_Month",
+    36: "Date_Year",
+    37: "Total_Operating_Hours",
+    38: "Hours_Of_Operation_In_Power1",
+    39: "Hours_Of_Operation_In_Power2",
+    40: "Hours_Of_Operation_In_Power3",
+    41: "Hours_Of_Operation_In_Power4",
+    42: "Hours_Of_Operation_In_Power5",
+    43: "Hours_To_Service",
+    44: "Minutes_To_Switch_Off",
+    45: "Number_Of_Ignitions",
+    46: "Active_Temperature",
+    # Pellet_Sensor at position 47 is intentionally not exposed for this setup.
+    48: "Celcius_Or_Fahrenheit",
+    49: "Sound_Effects",
+    50: "Sleep",
+    51: "Mode",
+    59: "Return_Temperature",
+    60: "AntiFreeze",
+}
 
 TEMPERATURE_FIELDS = {
     "Ambient_Temperature",
@@ -320,13 +337,10 @@ def _parse_pipe_frame(raw: str) -> dict[str, Any]:
     parts = raw.split("|")
     data: dict[str, Any] = {}
 
-    for index, value in enumerate(parts):
-        if index >= len(POSITIONAL_FIELDS):
-            break
-        field = POSITIONAL_FIELDS[index]
-        if not field:
+    for index, field in POSITIONAL_FIELDS.items():
+        if index >= len(parts):
             continue
-        parsed = _parse_mcz_value(value)
+        parsed = _parse_mcz_value(parts[index])
         if parsed is not None:
             data[field] = parsed
 
@@ -339,16 +353,14 @@ def _parse_mcz_value(value: str) -> Any:
     if value == "":
         return None
 
+    # Frame values are hexadecimal; any decimal integer is also valid hexadecimal.
     try:
         return int(value, 16)
     except ValueError:
         try:
-            return int(value)
+            return float(value)
         except ValueError:
-            try:
-                return float(value)
-            except ValueError:
-                return value
+            return value
 
 
 def normalize_status(data: dict[str, Any]) -> dict[str, Any]:
@@ -391,31 +403,16 @@ def normalize_status(data: dict[str, Any]) -> dict[str, Any]:
 
 def command_to_update(command: str, value: Any) -> dict[str, Any]:
     """Return an optimistic normalized state update for a successfully sent command."""
+    key = COMMAND_STATE_KEYS.get(command)
+    if key is None:
+        return {}
     if command == "Power":
-        return {"power": bool(_to_bool(value))}
-    if command == "Power_Level":
-        return {"power_level": _to_int(value)}
-    if command == "Fan_State":
-        return {"fan_state": _to_int(value)}
-    if command == "DuctedFan1":
-        return {"ducted_fan_1": _to_int(value)}
-    if command == "DuctedFan2":
-        return {"ducted_fan_2": _to_int(value)}
-    if command == "Eco_Mode":
-        return {"eco_mode": _to_bool(value)}
-    if command == "Silent_Mode":
-        return {"silent_mode": _to_bool(value)}
-    if command == "Active_Mode":
-        return {"active_mode": _to_bool(value)}
-    if command == "Sound_Effects":
-        return {"sound_effects": _to_bool(value)}
-    if command == "Summer_Mode":
-        return {"summer_mode": _to_bool(value)}
+        return {key: bool(_to_bool(value))}
     if command == "Temperature_Setpoint":
-        return {"temperature_setpoint": _to_float(value)}
-    if command == "Profile":
-        return {"profile": _to_int(value)}
-    return {}
+        return {key: _to_float(value)}
+    if command in BOOL_COMMANDS:
+        return {key: _to_bool(value)}
+    return {key: _to_int(value)}
 
 
 def merge_status(previous: dict[str, Any] | None, update: dict[str, Any]) -> dict[str, Any]:

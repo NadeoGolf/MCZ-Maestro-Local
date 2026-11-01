@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-
+from .coordinator import MczMaestroConfigEntry
+from .entity import MczMaestroEntity
 
 PROFILE_OPTIONS = {
     "Manuel (0)": 0,
@@ -28,7 +29,6 @@ class MczSelectDescription(SelectEntityDescription):
     min_level: int | None = None
     max_level: int | None = None
     value_options: dict[str, int] = field(default_factory=dict)
-    enabled_by_default: bool = True
 
 
 SELECTS: tuple[MczSelectDescription, ...] = (
@@ -50,27 +50,23 @@ SELECTS: tuple[MczSelectDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(MczMaestroSelect(coordinator, entry, description) for description in SELECTS)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MczMaestroConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
+    async_add_entities(MczMaestroSelect(coordinator, description) for description in SELECTS)
 
 
-class MczMaestroSelect(CoordinatorEntity, RestoreEntity, SelectEntity):
+class MczMaestroSelect(MczMaestroEntity, RestoreEntity, SelectEntity):
     """Liste déroulante pour les valeurs MCZ à choix limité."""
 
-    _attr_has_entity_name = True
+    entity_description: MczSelectDescription
 
-    def __init__(self, coordinator, entry, description: MczSelectDescription):
-        super().__init__(coordinator)
+    def __init__(self, coordinator, description: MczSelectDescription):
+        super().__init__(coordinator, f"{description.key}_select")
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}_select"
         self._attr_options = self._build_options(description)
-        self._attr_device_info = coordinator.device_info
         self._restored_option: str | None = None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        return self.entity_description.enabled_by_default
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -101,8 +97,7 @@ class MczMaestroSelect(CoordinatorEntity, RestoreEntity, SelectEntity):
 
         self._restored_option = option
         self.async_write_ha_state()
-        await self.coordinator.async_send_command(self.entity_description.command, value)
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, value)
 
     @staticmethod
     def _build_options(description: MczSelectDescription) -> list[str]:

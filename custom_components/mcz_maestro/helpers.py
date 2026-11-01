@@ -27,32 +27,35 @@ LIVE_OPTION_KEYS = {
 }
 
 
-def entry_value(entry: ConfigEntry, key: str, default: Any) -> Any:
-    """Return an option value, then a config data value, then a default."""
-    if key in entry.options:
-        return entry.options[key]
-    if key in entry.data:
-        return entry.data[key]
-    return default
+def option_float(entry: ConfigEntry, key: str, default: float) -> float:
+    """Return a numeric option, falling back to the default when invalid."""
+    try:
+        return float(entry.options.get(key, default))
+    except (TypeError, ValueError):
+        return default
 
 
-def device_name(entry: ConfigEntry) -> str:
-    """Return the user-visible device name."""
-    return str(entry_value(entry, CONF_NAME, DEFAULT_NAME)).strip() or DEFAULT_NAME
+def option_int(entry: ConfigEntry, key: str, default: int) -> int:
+    """Return an integer option, falling back to the default when invalid."""
+    try:
+        return int(entry.options.get(key, default))
+    except (TypeError, ValueError):
+        return default
 
 
-def device_model(entry: ConfigEntry) -> str:
-    """Return the configured MCZ model."""
-    return str(entry_value(entry, CONF_MODEL, DEFAULT_MODEL)).strip() or DEFAULT_MODEL
+def _entry_text(entry: ConfigEntry, key: str, default: str) -> str:
+    """Return a text option, then a config data value, then a default."""
+    value = entry.options.get(key, entry.data.get(key, default))
+    return str(value).strip() or default
 
 
 def device_info(entry: ConfigEntry) -> dict[str, Any]:
     """Return common device info for all entities."""
     return {
         "identifiers": {(DOMAIN, entry.entry_id)},
-        "name": device_name(entry),
+        "name": _entry_text(entry, CONF_NAME, DEFAULT_NAME),
         "manufacturer": MANUFACTURER,
-        "model": device_model(entry),
+        "model": _entry_text(entry, CONF_MODEL, DEFAULT_MODEL),
     }
 
 

@@ -3,22 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_HOST, DOMAIN, INTEGRATION_VERSION
+from .coordinator import MczMaestroConfigEntry
 
 TO_REDACT = {CONF_HOST}
 REDACTED = "**REDACTED**"
-
-
-def _safe_data(data: dict[str, Any] | None) -> dict[str, Any]:
-    if not data:
-        return {}
-
-    # Keep the raw decoded values and last frame available for troubleshooting.
-    # They normally contain stove telemetry, not credentials.
-    return dict(data)
 
 
 def _redact_host(value: Any, host: str) -> Any:
@@ -32,11 +23,13 @@ def _redact_host(value: Any, host: str) -> Any:
     return value
 
 
-async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: MczMaestroConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    coordinator = entry.runtime_data
     host = str(entry.data.get(CONF_HOST) or "")
 
+    # Decoded values and the last raw frame are kept for troubleshooting:
+    # they contain stove telemetry, not credentials.
     return _redact_host({
         "integration": {
             "domain": DOMAIN,
@@ -50,9 +43,9 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "options": dict(entry.options),
         },
         "coordinator": {
-            "last_update_success": getattr(coordinator, "last_update_success", None),
-            "update_interval": str(getattr(coordinator, "update_interval", None)),
-            "data": _safe_data(getattr(coordinator, "data", None)),
+            "last_update_success": coordinator.last_update_success,
+            "update_interval": str(coordinator.update_interval),
+            "data": dict(coordinator.data or {}),
         },
-        "client": getattr(getattr(coordinator, "client", None), "diagnostics", {}),
+        "client": coordinator.client.diagnostics,
     }, host)

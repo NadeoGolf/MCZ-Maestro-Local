@@ -1,5 +1,21 @@
 # Historique des modifications
 
+## 0.21.2 — 1er novembre 2026
+
+### Correctif
+
+- Les ventilateurs déclarent les fonctions `TURN_ON` / `TURN_OFF` exigées par Home Assistant : `fan.turn_on`, `fan.turn_off` et le bouton marche/arrêt de l'interface étaient refusés (« service non pris en charge »).
+
+### Nettoyage et optimisation (sans changement de comportement)
+
+- Entité de base commune (`entity.py`) : identifiant unique, appareil, envoi de commande suivi d'un rafraîchissement.
+- Le coordinateur est stocké dans `entry.runtime_data` au lieu de `hass.data`.
+- Activation par défaut des entités via le champ standard `entity_registry_enabled_default`.
+- Constantes de préréglages et attributs reprises de Home Assistant ; lecture des options numériques factorisée.
+- Climat : `turn_on` / `turn_off` délèguent à `set_hvac_mode`, application de la consigne factorisée.
+- Protocole : table de correspondance des commandes, champs positionnels en dictionnaire, branche de décodage morte supprimée, trame décodée une seule fois.
+- Tests supplémentaires sur le protocole.
+
 ## 0.21.1 — 25 octobre 2026
 
 ### Correctif

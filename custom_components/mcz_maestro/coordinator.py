@@ -11,26 +11,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .client import MczMaestroClient, MczMaestroError
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .helpers import device_info, reload_options
+from .helpers import device_info, option_int, reload_options
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _scan_interval(entry: ConfigEntry) -> int:
-    try:
-        value = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
-    except (TypeError, ValueError):
-        value = DEFAULT_SCAN_INTERVAL
-    return max(5, value)
+type MczMaestroConfigEntry = ConfigEntry[MczMaestroCoordinator]
 
 
 class MczMaestroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: MczMaestroClient) -> None:
+    def __init__(self, hass: HomeAssistant, entry: MczMaestroConfigEntry, client: MczMaestroClient) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=_scan_interval(entry)),
+            update_interval=timedelta(seconds=max(5, option_int(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))),
             always_update=False,
         )
         self.entry = entry

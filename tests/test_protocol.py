@@ -80,3 +80,43 @@ def test_command_to_update_temperature_setpoint():
 def test_normalize_timespan_string_from_gateway():
     parsed = normalize_status({"Total_Operating_Hours": "307:00:00"})
     assert parsed["total_operating_hours"] == 307
+
+
+def test_command_to_update_covers_every_command():
+    expected = {
+        "Power": {"power": True},
+        "Active_Mode": {"active_mode": True},
+        "Power_Level": {"power_level": 1},
+        "Fan_State": {"fan_state": 1},
+        "DuctedFan1": {"ducted_fan_1": 1},
+        "DuctedFan2": {"ducted_fan_2": 1},
+        "Eco_Mode": {"eco_mode": True},
+        "Temperature_Setpoint": {"temperature_setpoint": 1.0},
+        "Silent_Mode": {"silent_mode": True},
+        "Sound_Effects": {"sound_effects": True},
+        "Summer_Mode": {"summer_mode": True},
+        "Profile": {"profile": 1},
+    }
+    assert set(expected) == set(protocol.COMMAND_IDS)
+    for command, update in expected.items():
+        assert command_to_update(command, 1) == update, command
+    assert command_to_update("Power", None) == {"power": False}
+    assert command_to_update("Unknown", 1) == {}
+
+
+def test_pipe_frame_values_are_hexadecimal_with_fallbacks():
+    parts = ["01"] + ["00"] * 60
+    parts[2] = "10"  # Fan_State: hexadecimal 0x10
+    parts[30] = "1.5"  # not hexadecimal: float fallback
+    parts[31] = ""  # empty: ignored
+    parsed = parse_status_message("|".join(parts))
+    assert parsed["fan_state"] == 16
+    assert parsed["firmware_version"] == 1
+    assert "database_id" not in parsed
+
+
+def test_short_pipe_frame_only_parses_present_positions():
+    parsed = parse_status_message("01|0B|02")
+    assert parsed["stove_state"] == 11
+    assert parsed["fan_state"] == 2
+    assert "ambient_temperature" not in parsed
