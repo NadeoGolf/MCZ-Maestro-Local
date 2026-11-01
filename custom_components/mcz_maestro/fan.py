@@ -4,9 +4,11 @@ from dataclasses import dataclass
 import math
 
 from homeassistant.components.fan import FanEntity, FanEntityDescription, FanEntityFeature
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import MczMaestroConfigEntry
+from .entity import MczMaestroEntity
 
 AUTO_PRESET = "Auto"
 
@@ -33,23 +35,28 @@ FANS: tuple[MczFanDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(MczMaestroFan(coordinator, entry, description) for description in FANS)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MczMaestroConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
+    async_add_entities(MczMaestroFan(coordinator, description) for description in FANS)
 
 
-class MczMaestroFan(CoordinatorEntity, FanEntity):
-    _attr_has_entity_name = True
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+class MczMaestroFan(MczMaestroEntity, FanEntity):
+    entity_description: MczFanDescription
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
     _attr_preset_modes = [AUTO_PRESET]
 
-    def __init__(self, coordinator, entry, description: MczFanDescription):
-        super().__init__(coordinator)
+    def __init__(self, coordinator, description: MczFanDescription):
+        super().__init__(coordinator, f"{description.key}_fan")
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}_fan"
         self._attr_speed_count = description.max_manual_level
         self._last_non_zero_level = 1
-        self._attr_device_info = coordinator.device_info
 
     def _current_level(self) -> int | None:
         value = self.coordinator.data.get(self.entity_description.key)
@@ -98,14 +105,12 @@ class MczMaestroFan(CoordinatorEntity, FanEntity):
             level = math.ceil((percentage / 100) * self.entity_description.max_manual_level)
             level = max(1, min(level, self.entity_description.max_manual_level))
 
-        await self.coordinator.async_send_command(self.entity_description.command, float(level))
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, float(level))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         if preset_mode != AUTO_PRESET:
             return
-        await self.coordinator.async_send_command(self.entity_description.command, float(self.entity_description.auto_level))
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, float(self.entity_description.auto_level))
 
     async def async_turn_on(self, percentage: int | None = None, preset_mode: str | None = None, **kwargs) -> None:
         if preset_mode == AUTO_PRESET:
@@ -119,9 +124,7 @@ class MczMaestroFan(CoordinatorEntity, FanEntity):
         if level is None or level <= 0 or level == self.entity_description.auto_level:
             level = self._last_non_zero_level or 1
 
-        await self.coordinator.async_send_command(self.entity_description.command, float(level))
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, float(level))
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self.coordinator.async_send_command(self.entity_description.command, 0.0)
-        await self.coordinator.async_request_refresh()
+        await self._async_send_and_refresh(self.entity_description.command, 0.0)

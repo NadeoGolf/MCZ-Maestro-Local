@@ -55,12 +55,8 @@ class MczMaestroClient:
 
     async def send_command(self, command: str, value: Any) -> None:
         payload = build_command(command, value)
-
-        async def _send() -> None:
-            await self._send_command_once(command, value, payload)
-
         async with self._lock:
-            await self._with_retries("commande", _send)
+            await self._with_retries("commande", lambda: self._send_command_once(command, value, payload))
 
     async def _get_status_once(self) -> dict[str, Any]:
         async with websockets.connect(self.uri, open_timeout=self.open_timeout, close_timeout=1) as websocket:
@@ -139,7 +135,7 @@ class MczMaestroClient:
         raw_text = raw.decode(errors="ignore") if isinstance(raw, bytes) else str(raw)
         self.last_raw_message = raw_text
         _LOGGER.debug("MCZ recv: %s", raw_text)
-        update = parse_status_message(raw)
+        update = parse_status_message(raw_text)
         if raw_frame := update.get("raw_frame"):
             self.last_raw_frame = str(raw_frame)
         return update

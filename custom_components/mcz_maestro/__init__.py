@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .client import MczMaestroClient
@@ -13,42 +13,32 @@ from .const import (
     DEFAULT_OPEN_TIMEOUT,
     DEFAULT_RECV_TIMEOUT,
     DEFAULT_RETRIES,
-    DOMAIN,
 )
-from .coordinator import MczMaestroCoordinator
-from .helpers import reload_options
+from .coordinator import MczMaestroConfigEntry, MczMaestroCoordinator
+from .helpers import option_float, option_int, reload_options
 
-PLATFORMS = ["climate", "sensor", "switch", "select", "number", "fan"]
-
-
-def _option_float(entry: ConfigEntry, key: str, default: float) -> float:
-    try:
-        return float(entry.options.get(key, default))
-    except (TypeError, ValueError):
-        return default
-
-
-def _option_int(entry: ConfigEntry, key: str, default: int) -> int:
-    try:
-        return int(entry.options.get(key, default))
-    except (TypeError, ValueError):
-        return default
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.SELECT,
+    Platform.NUMBER,
+    Platform.FAN,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MczMaestroConfigEntry) -> bool:
     client = MczMaestroClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
-        open_timeout=_option_float(entry, CONF_OPEN_TIMEOUT, DEFAULT_OPEN_TIMEOUT),
-        recv_timeout=_option_float(entry, CONF_RECV_TIMEOUT, DEFAULT_RECV_TIMEOUT),
-        retries=_option_int(entry, CONF_RETRIES, DEFAULT_RETRIES),
+        open_timeout=option_float(entry, CONF_OPEN_TIMEOUT, DEFAULT_OPEN_TIMEOUT),
+        recv_timeout=option_float(entry, CONF_RECV_TIMEOUT, DEFAULT_RECV_TIMEOUT),
+        retries=option_int(entry, CONF_RETRIES, DEFAULT_RETRIES),
     )
 
     coordinator = MczMaestroCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -56,17 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: MczMaestroConfigEntry) -> bool:
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: MczMaestroConfigEntry) -> None:
     """Reload after options changes, except for thermostat settings read live."""
-    coordinator: MczMaestroCoordinator | None = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-    if coordinator is not None and reload_options(entry.options) == coordinator.reload_options:
+    coordinator = entry.runtime_data
+    if reload_options(entry.options) == coordinator.reload_options:
         # Refresh entity states and let the thermostat re-evaluate with the new values.
         coordinator.async_update_listeners()
         return

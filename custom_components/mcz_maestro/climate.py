@@ -3,44 +3,51 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import logging
 
-from homeassistant.components.climate import ClimateEntity, HVACAction
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
+    PRESET_AWAY,
+    PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_CONTROL_MODE,
-    CONF_COLD_TOLERANCE,
-    CONF_HOT_TOLERANCE,
     CONF_AWAY_TEMPERATURE,
+    CONF_COLD_TOLERANCE,
+    CONF_CONTROL_MODE,
+    CONF_HOT_TOLERANCE,
     CONF_MIN_CYCLE_DURATION_SECONDS,
     CONF_STOVE_TYPE,
     CONTROL_MODE_HA_THERMOSTAT,
     CONTROL_MODE_NATIVE_SETPOINT,
     DEFAULT_AWAY_TEMPERATURE,
-    DEFAULT_STOVE_TYPE,
     DEFAULT_COLD_TOLERANCE,
     DEFAULT_HOT_TOLERANCE,
     DEFAULT_MIN_CYCLE_SECONDS,
+    DEFAULT_STOVE_TYPE,
     DEFAULT_TARGET_TEMPERATURE,
-    DOMAIN,
 )
+from .coordinator import MczMaestroConfigEntry
+from .entity import MczMaestroEntity
+from .helpers import option_float, option_int
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PRESET_MODE = "preset_mode"
-PRESET_AWAY = "away"
-PRESET_NONE = "none"
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MczMaestroConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    async_add_entities([MczMaestroClimate(entry.runtime_data)])
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MczMaestroClimate(coordinator, entry)])
-
-
-class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
+class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
     """MCZ climate entity.
 
     Deux modes sont disponibles dans les options de l'intégration:
@@ -48,7 +55,6 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
     - mcz_native_setpoint: la consigne est envoyée au poêle avec Temperature_Setpoint.
     """
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
@@ -63,11 +69,9 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_climate"
-        self._attr_device_info = coordinator.device_info
+    def __init__(self, coordinator):
+        super().__init__(coordinator, "climate")
+        self.entry = coordinator.entry
         self._target_temperature = DEFAULT_TARGET_TEMPERATURE
         self._preset_mode = PRESET_NONE
         self._hvac_mode = HVACMode.OFF
@@ -84,22 +88,19 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
 
     @property
     def cold_tolerance(self) -> float:
-        return float(self.entry.options.get(CONF_COLD_TOLERANCE, DEFAULT_COLD_TOLERANCE))
+        return option_float(self.entry, CONF_COLD_TOLERANCE, DEFAULT_COLD_TOLERANCE)
 
     @property
     def hot_tolerance(self) -> float:
-        return float(self.entry.options.get(CONF_HOT_TOLERANCE, DEFAULT_HOT_TOLERANCE))
+        return option_float(self.entry, CONF_HOT_TOLERANCE, DEFAULT_HOT_TOLERANCE)
 
     @property
     def away_temperature(self) -> float:
-        return float(self.entry.options.get(CONF_AWAY_TEMPERATURE, DEFAULT_AWAY_TEMPERATURE))
+        return option_float(self.entry, CONF_AWAY_TEMPERATURE, DEFAULT_AWAY_TEMPERATURE)
 
     @property
     def min_cycle_duration_seconds(self) -> int:
-        try:
-            return int(self.entry.options.get(CONF_MIN_CYCLE_DURATION_SECONDS, DEFAULT_MIN_CYCLE_SECONDS))
-        except (TypeError, ValueError):
-            return DEFAULT_MIN_CYCLE_SECONDS
+        return option_int(self.entry, CONF_MIN_CYCLE_DURATION_SECONDS, DEFAULT_MIN_CYCLE_SECONDS)
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -194,13 +195,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
             self._preset_mode = PRESET_NONE
 
         self.async_write_ha_state()
-
-        if self.native_control_enabled:
-            await self.coordinator.async_send_command("Temperature_Setpoint", self._target_temperature)
-            await self.coordinator.async_request_refresh()
-            return
-
-        await self._async_regulate()
+        await self._async_apply_target(self._target_temperature)
 
     async def async_set_preset_mode(self, preset_mode):
         if preset_mode not in self.preset_modes:
@@ -208,13 +203,7 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
 
         self._preset_mode = preset_mode
         self.async_write_ha_state()
-
-        if self.native_control_enabled:
-            await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
-            await self.coordinator.async_request_refresh()
-            return
-
-        await self._async_regulate()
+        await self._async_apply_target(self.target_temperature)
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF:
@@ -232,20 +221,19 @@ class MczMaestroClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self):
-        self._hvac_mode = HVACMode.HEAT
-        self.async_write_ha_state()
-        if self.native_control_enabled:
-            await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
-            await self._async_send_power(True, bypass_min_cycle=True)
-            await self.coordinator.async_request_refresh()
-            return
-        await self._async_regulate()
+        await self.async_set_hvac_mode(HVACMode.HEAT)
 
     async def async_turn_off(self):
-        self._hvac_mode = HVACMode.OFF
-        await self._async_send_power(False, bypass_min_cycle=True)
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def _async_apply_target(self, temperature: float) -> None:
+        """Send the target to the stove, or let the local thermostat react to it."""
+        if self.native_control_enabled:
+            await self.coordinator.async_send_command("Temperature_Setpoint", temperature)
+            await self.coordinator.async_request_refresh()
+            return
+
+        await self._async_regulate()
 
     def _handle_coordinator_update(self) -> None:
         super()._handle_coordinator_update()

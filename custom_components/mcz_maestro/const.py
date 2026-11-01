@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "mcz_maestro"
-INTEGRATION_VERSION = "0.21.1"
+INTEGRATION_VERSION = "0.21.2"
 
 CONF_HOST = "host"
 CONF_PORT = "port"
@@ -51,4 +51,3 @@ DEFAULT_HOT_TOLERANCE = 0.5
 DEFAULT_MIN_CYCLE_SECONDS = 10 * 60
 
 MANUFACTURER = "MCZ"
-MODEL = DEFAULT_MODEL

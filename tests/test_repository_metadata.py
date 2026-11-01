@@ -20,7 +20,7 @@ def test_hacs_manifest_has_required_keys():
     assert required <= manifest.keys()
     assert manifest["domain"] == COMPONENT.name
     assert manifest["codeowners"] == ["@NadeoGolf"]
-    assert manifest["version"] == "0.21.1"
+    assert manifest["version"] == "0.21.2"
     assert manifest["issue_tracker"].startswith("https://github.com/")
     assert manifest["integration_type"] == "device"
     keys = list(manifest)
