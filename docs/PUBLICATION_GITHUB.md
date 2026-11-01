@@ -46,11 +46,24 @@ réel du poêle : le correctif d'extinction doit encore être validé sur l'appa
 
 ## 4. Créer une véritable release GitHub
 
-Dans **Releases → Draft a new release**, créer le tag `v0.21.1`, choisir
-`main`, puis rédiger les notes à partir de `CHANGELOG.md`.
+La release est créée automatiquement par le workflow `Release`
+(`.github/workflows/release.yml`) lorsqu'un tag `vX.Y.Z` est poussé sur `main` :
 
-**Important :** si `v0.21.1` existe déjà, ne réécrivez pas son tag ; une nouvelle
-version doit alors être préparée avec une nouvelle numérotation cohérente dans
+```bash
+git tag v0.21.2 origin/main
+git push origin v0.21.2
+```
+
+Le workflow vérifie que le tag correspond à la version de `manifest.json` et de
+`const.py`, relance les tests, puis publie la release avec la section
+`## X.Y.Z` de `CHANGELOG.md` comme notes. Il échoue sans rien publier si l'une
+de ces conditions n'est pas remplie.
+
+Il reste possible de créer une release à la main dans **Releases → Draft a new
+release**, en choisissant `main` et en reprenant les notes de `CHANGELOG.md`.
+
+**Important :** ne réécrivez jamais un tag déjà publié ; une nouvelle version
+doit être préparée avec une nouvelle numérotation cohérente dans
 `manifest.json`, `const.py` et `CHANGELOG.md`.
 
 HACS privilégie les releases GitHub publiées pour ses versions ; un simple tag
