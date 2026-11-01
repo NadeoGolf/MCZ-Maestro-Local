@@ -59,8 +59,14 @@ Le workflow vérifie que le tag correspond à la version de `manifest.json` et d
 `## X.Y.Z` de `CHANGELOG.md` comme notes. Il échoue sans rien publier si l'une
 de ces conditions n'est pas remplie.
 
-Il reste possible de créer une release à la main dans **Releases → Draft a new
-release**, en choisissant `main` et en reprenant les notes de `CHANGELOG.md`.
+Sans accès Git en ligne de commande, le même workflow se lance depuis
+**Actions → Release → Run workflow** sur la branche `main`, en saisissant la
+version (par exemple `0.21.2`) : il crée alors lui-même le tag sur `main` avec
+les mêmes vérifications.
+
+Évitez de créer la release à la main dans **Releases → Draft a new release** :
+le tag créé déclencherait le workflow, qui échouerait car la release existerait
+déjà.
 
 **Important :** ne réécrivez jamais un tag déjà publié ; une nouvelle version
 doit être préparée avec une nouvelle numérotation cohérente dans
