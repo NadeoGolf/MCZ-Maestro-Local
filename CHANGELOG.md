@@ -1,5 +1,13 @@
 # Historique des modifications
 
+## 0.21.3 — 9 novembre 2026
+
+### Compatibilité Home Assistant 2026.11
+
+- Le thermostat fournit l'API `native_*` (`native_temperature_unit`, `native_current_temperature`, `native_target_temperature`) introduite dans Home Assistant 2026.11 : les trois avertissements de dépréciation (`_attr_temperature_unit`, `current_temperature`, `target_temperature`, retrait prévu en 2027.11) disparaissent.
+- Les anciens noms restent fournis comme simples alias pour Home Assistant < 2026.11, qui ne connaît pas l'API `native_*` : la version minimale (2024.11.0) est inchangée.
+- La régulation et l'envoi de consigne lisent directement les valeurs `native_*`.
+
 ## 0.21.2 — 1er novembre 2026
 
 ### Correctif

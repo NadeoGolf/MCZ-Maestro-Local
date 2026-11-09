@@ -56,6 +56,9 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
     """
 
     _attr_name = None
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    # Legacy name read by Home Assistant < 2026.11. HA 2026.11+ uses the native_
+    # API and logs no deprecation warning when a class provides both.
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_min_temp = 10
@@ -129,11 +132,11 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
                     pass
 
     @property
-    def current_temperature(self):
+    def native_current_temperature(self):
         return self.coordinator.data.get("ambient_temperature")
 
     @property
-    def target_temperature(self):
+    def native_target_temperature(self):
         if self._preset_mode == PRESET_AWAY:
             return self.away_temperature
 
@@ -146,6 +149,15 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
                     pass
 
         return self._target_temperature
+
+    # Legacy names read by Home Assistant < 2026.11 (deprecated there, removed in 2027.11).
+    @property
+    def current_temperature(self):
+        return self.native_current_temperature
+
+    @property
+    def target_temperature(self):
+        return self.native_target_temperature
 
     @property
     def preset_mode(self):
@@ -203,7 +215,7 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
 
         self._preset_mode = preset_mode
         self.async_write_ha_state()
-        await self._async_apply_target(self.target_temperature)
+        await self._async_apply_target(self.native_target_temperature)
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF:
@@ -212,7 +224,7 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             self._hvac_mode = HVACMode.HEAT
             if self.native_control_enabled:
-                await self.coordinator.async_send_command("Temperature_Setpoint", self.target_temperature)
+                await self.coordinator.async_send_command("Temperature_Setpoint", self.native_target_temperature)
                 await self._async_send_power(True, bypass_min_cycle=True)
             else:
                 await self._async_regulate()
@@ -251,8 +263,8 @@ class MczMaestroClimate(MczMaestroEntity, RestoreEntity, ClimateEntity):
         if self._regulating or self._hvac_mode != HVACMode.HEAT or self.native_control_enabled:
             return
 
-        current = self.current_temperature
-        target = self.target_temperature
+        current = self.native_current_temperature
+        target = self.native_target_temperature
         if current is None or target is None:
             return
 
