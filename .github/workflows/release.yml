@@ -1,84 +1,61 @@
 name: Release
 
+# Actions > Release > Run workflow : la version est calculée à partir du dernier tag vX.Y.Z,
+# appliquée au manifest et à const.py, commitée et taguée, puis publiée en release GitHub (lue par HACS).
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to publish, without the v (e.g. 0.21.2). The tag is created on main."
-        required: true
+      bump:
+        description: Incrément de version
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Publish GitHub release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          fetch-depth: 0
 
-      - name: Determine version
+      - name: Version
         env:
-          INPUT_VERSION: ${{ inputs.version }}
+          BUMP: ${{ inputs.bump }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ "$GITHUB_REF" != "refs/heads/main" ]; then
-              echo "::error::Manual releases must be started from main"
-              exit 1
-            fi
-            version="${INPUT_VERSION#v}"
-          else
-            version="${GITHUB_REF_NAME#v}"
-          fi
-          if ! printf '%s' "$version" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+'; then
-            echo "::error::Invalid version '$version' (expected X.Y.Z)"
-            exit 1
-          fi
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-          echo "TAG=v$version" >> "$GITHUB_ENV"
+          last=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          IFS=. read -r ma mi pa <<< "${last:-v0.0.0}"; ma=${ma#v}
+          case "$BUMP" in
+            major) ma=$((ma+1)); mi=0; pa=0 ;;
+            minor) mi=$((mi+1)); pa=0 ;;
+            *)     pa=$((pa+1)) ;;
+          esac
+          echo "VERSION=$ma.$mi.$pa" >> "$GITHUB_ENV"
+          echo "TAG=v$ma.$mi.$pa" >> "$GITHUB_ENV"
+          echo "${last:-aucun tag} -> v$ma.$mi.$pa"
 
-      - name: Check version consistency
+      - name: Appliquer la version
         run: |
-          manifest=$(python -c "import json; print(json.load(open('custom_components/mcz_maestro/manifest.json'))['version'])")
-          if [ "$manifest" != "$VERSION" ]; then
-            echo "::error::Version $VERSION does not match manifest.json version $manifest"
-            exit 1
-          fi
-          if ! grep -qx "INTEGRATION_VERSION = \"$VERSION\"" custom_components/mcz_maestro/const.py; then
-            echo "::error::INTEGRATION_VERSION in const.py does not match $VERSION"
-            exit 1
-          fi
+          sed -i -E "s/(\"version\": *\")[^\"]*\"/\1$VERSION\"/" custom_components/mcz_maestro/manifest.json
+          sed -i -E "s/^INTEGRATION_VERSION = \".*\"/INTEGRATION_VERSION = \"$VERSION\"/" custom_components/mcz_maestro/const.py
 
-      - name: Run unit tests
+      - name: Commit et tag
         run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pytest -q tests
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/mcz_maestro/manifest.json custom_components/mcz_maestro/const.py
+          git diff --cached --quiet || git commit -m "Release $TAG"
+          git tag "$TAG"
+          git push origin "HEAD:$GITHUB_REF_NAME" "$TAG"
 
-      - name: Extract release notes from CHANGELOG.md
-        run: |
-          awk -v heading="## $VERSION" '
-            $0 == heading || index($0, heading " ") == 1 { found = 1; next }
-            found && /^## / { exit }
-            found { print }
-          ' CHANGELOG.md | sed '/./,$!d' > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "::error::No '## $VERSION' section found in CHANGELOG.md"
-            exit 1
-          fi
-
-      - name: Create release
+      - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            # Creates the tag on the checked-out main commit if it does not exist yet.
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md
-          else
-            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file release-notes.md
-          fi
+        run: gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
