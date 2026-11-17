@@ -33,10 +33,9 @@ apparaissent après le push.
 
 ## 3. Vérifier les contrôles GitHub Actions
 
-Dans l'onglet **Actions**, lancer ou consulter `Validate integration`. Trois
-vérifications sont prévues :
+Dans l'onglet **Actions**, lancer ou consulter `Validate`. Deux
+vérifications, exigées par HACS, sont prévues :
 
-- `tests` : syntaxe Python et tests unitaires ;
 - `hacs` : validation du dépôt par HACS ;
 - `hassfest` : contrôle du manifeste et de l'intégration par Home Assistant.
 
@@ -46,31 +45,13 @@ réel du poêle : le correctif d'extinction doit encore être validé sur l'appa
 
 ## 4. Créer une véritable release GitHub
 
-La release est créée automatiquement par le workflow `Release`
-(`.github/workflows/release.yml`) lorsqu'un tag `vX.Y.Z` est poussé sur `main` :
-
-```bash
-git tag v0.21.2 origin/main
-git push origin v0.21.2
-```
-
-Le workflow vérifie que le tag correspond à la version de `manifest.json` et de
-`const.py`, relance les tests, puis publie la release avec la section
-`## X.Y.Z` de `CHANGELOG.md` comme notes. Il échoue sans rien publier si l'une
-de ces conditions n'est pas remplie.
-
-Sans accès Git en ligne de commande, le même workflow se lance depuis
-**Actions → Release → Run workflow** sur la branche `main`, en saisissant la
-version (par exemple `0.21.2`) : il crée alors lui-même le tag sur `main` avec
-les mêmes vérifications.
+Après le merge des modifications sur `main` : **Actions → Release → Run workflow**, puis choisir l'incrément (`patch` par défaut, `minor` ou `major`). Le workflow calcule la nouvelle version à partir du dernier tag, la reporte dans `manifest.json` et `const.py`, crée le commit et le tag `vX.Y.Z`, puis publie la release avec des notes générées à partir des pull requests.
 
 Évitez de créer la release à la main dans **Releases → Draft a new release** :
-le tag créé déclencherait le workflow, qui échouerait car la release existerait
-déjà.
+le numéro ne serait pas reporté dans `manifest.json` et `const.py`.
 
-**Important :** ne réécrivez jamais un tag déjà publié ; une nouvelle version
-doit être préparée avec une nouvelle numérotation cohérente dans
-`manifest.json`, `const.py` et `CHANGELOG.md`.
+**Important :** ne réécrivez jamais un tag déjà publié. Pensez à compléter
+`CHANGELOG.md` dans la pull request pour les utilisateurs de l'intégration.
 
 HACS privilégie les releases GitHub publiées pour ses versions ; un simple tag
 ne remplace pas une release. Le dépôt peut également être ajouté comme
