@@ -1,0 +1,25 @@
+name: Release GitHub
+
+# Le dépôt de référence est sur Forgejo (repo.bureaumonnier.fr) et GitHub en est le miroir.
+# Quand le miroir pousse un tag vX.Y.Z, ce workflow crée la release GitHub lue par HACS.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 && { echo "Release déjà présente"; exit 0; }
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
