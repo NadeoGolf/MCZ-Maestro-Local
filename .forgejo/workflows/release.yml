@@ -1,7 +1,8 @@
 name: Release
 
 # Actions > Release > Run workflow : la version est calculée à partir du dernier tag vX.Y.Z,
-# appliquée au manifest et à const.py, commitée et taguée, puis publiée en release GitHub (lue par HACS).
+# appliquée au manifest et à const.py, commitée et taguée, puis publiée en release Forgejo.
+# Le miroir pousse ensuite le tag sur GitHub, où .github/workflows/github-release.yml crée la release lue par HACS.
 on:
   workflow_dispatch:
     inputs:
@@ -48,8 +49,8 @@ jobs:
 
       - name: Commit et tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Forgejo Actions"
+          git config user.email "actions@bureaumonnier.fr"
           git add custom_components/mcz_maestro/manifest.json custom_components/mcz_maestro/const.py
           git diff --cached --quiet || git commit -m "Release $TAG"
           git tag "$TAG"
@@ -57,5 +58,5 @@ jobs:
 
       - name: Release
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
+          FORGEJO_TOKEN: ${{ github.token }}
+        run: bash .forgejo/release.sh "$TAG" --title "$TAG" --generate-notes --verify-tag
